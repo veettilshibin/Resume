@@ -367,4 +367,174 @@ function setupCertificatesApp() {
     </svg>
   `;
 
-  // Add matching icons to both launch location
+  // Add matching icons to both launch locations.
+  [
+    {
+      container: document.getElementById('desktop-icons'),
+      selector: '.desk-icon',
+      image: '.desk-icon-img',
+      label: '.desk-icon-label'
+    },
+    {
+      container: document.querySelector('#program-manager .pm-icons'),
+      selector: '.pm-icon',
+      image: '.pm-icon-img',
+      label: '.pm-icon-label'
+    }
+  ].forEach(({ container, selector, image, label }) => {
+    if (!container) return;
+
+    const template = container.querySelector(selector);
+    if (!template) return;
+
+    const icon = template.cloneNode(true);
+    icon.removeAttribute('id');
+    icon.dataset.app = 'certificates';
+    icon.setAttribute('ondblclick', "openApp('certificates')");
+    icon.setAttribute('role', 'button');
+    icon.setAttribute('tabindex', '0');
+    icon.setAttribute('aria-label', 'Open Certificates');
+
+    icon.querySelector(image).innerHTML = certificateIcon;
+    icon.querySelector(label).textContent = 'Certificates';
+
+    icon.addEventListener('keydown', event => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        openApp('certificates');
+      }
+    });
+
+    // A single tap opens the app on touch devices.
+    icon.addEventListener('click', () => {
+      if (window.matchMedia('(pointer: coarse)').matches) {
+        openApp('certificates');
+      }
+    });
+
+    container.appendChild(icon);
+  });
+
+  // Reuse the Education window's existing structure and controls.
+  const certWindow = educationWindow.cloneNode(true);
+  certWindow.id = 'win-certificates';
+  certWindow.style.display = 'none';
+  certWindow.style.width =
+    Math.min(520, Math.max(240, window.innerWidth - 16)) + 'px';
+  certWindow.style.height = '420px';
+  certWindow.style.maxHeight = 'calc(100vh - 44px)';
+  delete certWindow.dataset.positioned;
+
+  // Point cloned controls at the new window.
+  [certWindow, ...certWindow.querySelectorAll('*')].forEach(element => {
+    [...element.attributes].forEach(attribute => {
+      if (attribute.name.startsWith('on')) {
+        element.setAttribute(
+          attribute.name,
+          attribute.value.replaceAll(
+            'win-education',
+            'win-certificates'
+          )
+        );
+      }
+    });
+  });
+
+  const title = certWindow.querySelector('.win-title');
+  title.innerHTML = certificateIcon + '<span>Certificates</span>';
+  title.querySelector('svg').setAttribute('class', 'title-icon');
+
+  const certificates = [
+    {
+      name: 'CompTIA CySA+',
+      url: 'https://www.credly.com/badges/5f661ad9-f09f-4088-b2e6-9086c8f47ab8/public_url'
+    },
+    {
+      name: 'CompTIA Security+',
+      url: 'https://www.credly.com/badges/dd530c5a-b3d2-4136-a26e-1d0265f7430f/public_url'
+    },
+    {
+      name: 'CSAP',
+      url: 'https://www.credly.com/badges/5f661ad9-f09f-4088-b2e6-9086c8f47ab8/public_url'
+    },
+    {
+      name: 'CC (ISC²)',
+      url: null
+    },
+    {
+      name: 'Proofpoint',
+      url: 'https://www.credly.com/badges/5e87b161-1750-4ed6-a59b-c5d2714abb66/public_url'
+    }
+  ];
+
+  const body = certWindow.querySelector('.win-body');
+  body.innerHTML = `
+    <div class="edu-section">
+      <div class="edu-section-title">Certificates</div>
+      <div class="cert-grid" style="grid-template-columns:1fr;">
+        ${certificates.map(cert => `
+          <div class="cert-card earned">
+            <div class="cert-badge" aria-hidden="true">✓</div>
+            <div class="cert-info">
+              <div class="cert-name">${cert.name}</div>
+              ${cert.url ? `
+                <a class="win-link-btn"
+                   style="margin-top:8px;"
+                   href="${cert.url}"
+                   target="_blank"
+                   rel="noopener noreferrer"
+                   aria-label="View ${cert.name} credential on Credly">
+                  View credential
+                </a>
+              ` : ''}
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+  body.style.overflowY = 'auto';
+  body.style.minHeight = '0';
+  body.style.flex = '1';
+
+  certWindow.addEventListener('mousedown', () => {
+    bringToFront('win-certificates');
+  });
+
+  // Set an initial position that also fits smaller screens.
+  certWindow.style.left =
+    Math.max(0, Math.min(130, window.innerWidth - parseFloat(
+      certWindow.style.width
+    ) - 8)) + 'px';
+  certWindow.style.top = '40px';
+  certWindow.dataset.positioned = '1';
+
+  desktop.appendChild(certWindow);
+
+  // Keep Education separate from Certificates.
+  const educationTitle = educationWindow.querySelector('.win-title');
+  [...educationTitle.childNodes].forEach(node => {
+    if (node.nodeType === Node.TEXT_NODE &&
+        node.textContent.includes('Education')) {
+      node.textContent = '\n          Education\n        ';
+    }
+  });
+
+  educationWindow.querySelectorAll('.edu-section').forEach(section => {
+    const heading = section.querySelector('.edu-section-title');
+    if (heading && heading.textContent.includes('Certifications')) {
+      const divider = section.previousElementSibling;
+      if (divider && divider.classList.contains('edu-divider')) {
+        divider.remove();
+      }
+      section.remove();
+    }
+  });
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', setupCertificatesApp);
+} else {
+  setupCertificatesApp();
+}
+
