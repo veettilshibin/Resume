@@ -337,3 +337,34 @@ document.addEventListener('keydown', (e) => {
     if (highest) closeWindow(highest.id);
   }
 });
+
+
+// ─── CERTIFICATES APP ───
+function setupCertificatesApp() {
+  if (document.getElementById('win-certificates')) return;
+
+  const educationWindow = document.getElementById('win-education');
+  const desktop = document.getElementById('desktop');
+  if (!educationWindow || !desktop) return;
+
+  windowTitles['win-certificates'] = 'Certificates';
+
+  const certificateIcon = `
+    <svg viewBox="0 0 32 32" fill="none"
+         xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <rect x="3" y="4" width="26" height="22"
+            fill="#ffffe0" stroke="#404040" stroke-width="2"/>
+      <rect x="6" y="7" width="20" height="16"
+            stroke="#808000"/>
+      <path d="M9 11h14M9 15h10"
+            stroke="#000080" stroke-width="2"/>
+      <path d="M19 23l-2 7 5-2 4 2-2-7"
+            fill="#800000"/>
+      <circle cx="22" cy="21" r="5"
+              fill="#c8c800" stroke="#808000"/>
+      <path d="M20 21l1.5 1.5 3-3"
+            stroke="#000080" stroke-width="1.5"/>
+    </svg>
+  `;
+
+  // Add matching icons to both launch location
